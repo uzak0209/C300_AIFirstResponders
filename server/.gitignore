@@ -1,1 +1,5 @@
+# virtual environment
 .venv/
+
+# synced pictures
+uploads/
