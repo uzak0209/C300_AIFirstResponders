@@ -1,5 +1,8 @@
 # virtual environment
 .venv/
 
+# dataset
+ai/
+
 # synced pictures
 uploads/
