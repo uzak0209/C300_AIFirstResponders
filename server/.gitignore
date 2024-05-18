@@ -1,8 +1,13 @@
 # virtual environment
 .venv/
 
-# dataset
-ai/
+# fire detection ai
+fire_detection_ai/runs/
+fire_detection_ai/dataset
+fire_detection_ai/new_dataset
+
+# downloaded images
+simple_images/
 
 # synced pictures
 uploads/
