@@ -3,38 +3,46 @@ import base64
 from ultralytics import YOLO
 from flask import Flask, request, jsonify
 
-app = Flask(__name__)
-
-image_counter = 0
-
-model = YOLO("../models/best.pt")
 
 UPLOAD_FOLDER = "uploads"
+model = YOLO("../models/best.pt")
+
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
+app = Flask(__name__)
+
+
+def get_highest_count() -> int:
+    highest = 0
+    for file in os.listdir(UPLOAD_FOLDER):
+        number = int(file.split("_")[1].split(".")[0])
+        if number > highest:
+            highest = number
+    return highest
+
+
+image_counter = get_highest_count()
 
 
 @app.route("/upload", methods=["POST"])
 def upload_image():
     try:
-        global image_counter  # Use the global image_counter variable
+        global image_counter
         data = request.json
         image_data_base64 = data.get("image")
 
-        # Decode base64 string to binary
         image_data_binary = base64.b64decode(image_data_base64)
 
-        # Increment image counter
         image_counter += 1
-
-        # Generate a unique filename using the image counter
+        
         filename = f"image_{image_counter}.jpg"
-
-        # Save the image to disk
+        
         with open(os.path.join(UPLOAD_FOLDER, filename), "wb") as f:
+            print(f"saving image {filename=}")
             f.write(image_data_binary)
 
-        results = model.predict(source="../../uploads", conf=0.5, save=True)
+        results = model.predict(source=os.path.join(UPLOAD_FOLDER, filename), save=True)
         result = results[0]
 
         if result:
