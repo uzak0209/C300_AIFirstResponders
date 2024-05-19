@@ -39,7 +39,7 @@ export default function Camera() {
 
         const photo = await cameraRef.current?.takePictureAsync(options);
 
-        const response = await fetch("https://cbf3-203-127-47-48.ngrok-free.app/upload", {
+        const response = await fetch("https://9cf7-101-100-172-100.ngrok-free.app/upload", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -50,13 +50,17 @@ export default function Camera() {
         console.log(response.status)
     }
 
+    function onCloseButtonPress() {
+        router.replace("/")
+    }
+
     return (
         <SafeAreaView style={styles.saveAreaContainer}>
             <StatusBar style="auto" />
             <View style={styles.cameraContainer}>
                 <CameraView style={styles.camera} ref={cameraRef} facing={facing}>
                     <View style={styles.headerActionButtons}>
-                        <TouchableOpacity onPress={() => router.replace('/')}>
+                        <TouchableOpacity onPress={onCloseButtonPress}>
                             <Ionicons name="close-outline" size={40} color="white" />
                         </TouchableOpacity>
                     </View>
