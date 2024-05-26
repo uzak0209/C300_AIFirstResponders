@@ -5,7 +5,7 @@ from flask import Flask, request, jsonify
 
 
 UPLOAD_FOLDER = "uploads"
-model = YOLO("../models/best.pt")
+model = YOLO("./fire_detection_ai/models/best.pt")
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
