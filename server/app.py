@@ -2,6 +2,7 @@ import os
 import base64
 from ultralytics import YOLO
 from flask import Flask, request, jsonify
+from message import send_message
 
 
 UPLOAD_FOLDER = "uploads"
@@ -30,6 +31,8 @@ def upload_image():
     try:
         global image_counter
         data = request.json
+        
+        image_exif = data.get("exif")
         image_data_base64 = data.get("image")
 
         image_data_binary = base64.b64decode(image_data_base64)
@@ -46,6 +49,7 @@ def upload_image():
         result = results[0]
 
         if result:
+            send_message("Fire has been detected")
             return jsonify(
                 {
                     "message": "Fire has been detected, emergency services has been contacted."

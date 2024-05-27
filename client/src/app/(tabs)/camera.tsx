@@ -44,7 +44,7 @@ export default function Camera() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ image: photo?.base64 })
+            body: JSON.stringify({ image: photo?.base64, exif: photo?.exif })
         });
 
         console.log(response.status)
