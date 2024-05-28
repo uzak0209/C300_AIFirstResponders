@@ -4,10 +4,12 @@
     "strict": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@hooks/*": ["./hooks/*"],
-      "@assets/*": ["./assets/*"],
-      "@constants/*": ["./src/constants"],
-      "@components/*": ["./src/components"]
+      "@api/*": ["./src/api/*"],
+      "@theme/*": ["./src/theme/*"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@assets/*": ["./src/assets/*"],
+      "@constants/*": ["./src/constants/*"],
+      "@components/*": ["./src/components/*"]
     }
   },
   "include": [
