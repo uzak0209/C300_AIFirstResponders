@@ -2,7 +2,7 @@ import os
 import base64
 from ultralytics import YOLO
 from flask import Flask, request, jsonify
-from message import send_message
+from message import *
 from geopy.geocoders import Nominatim
 
 geolocator = Nominatim(user_agent="aiFirstResponders")
@@ -56,13 +56,14 @@ def upload_image():
 
         if result:
             send_message(f"Fire has been detected at {retrieved_location.address}")
+            send_location(latitude, longtitude)
             return jsonify(
                 {
                     "message": "Fire has been detected, emergency services has been contacted."
                 }
-            )
+            ), 200
         else:
-            return jsonify({"message: ": "No fire detected."})
+            return jsonify({"message: ": "No fire detected."}), 200
     except Exception as e:
         return jsonify({"error": str(e)})
 
