@@ -3,7 +3,9 @@ import base64
 from ultralytics import YOLO
 from flask import Flask, request, jsonify
 from message import send_message
+from geopy.geocoders import Nominatim
 
+geolocator = Nominatim(user_agent="aiFirstResponders")
 
 UPLOAD_FOLDER = "uploads"
 model = YOLO("./fire_detection_ai/models/best.pt")
@@ -32,8 +34,13 @@ def upload_image():
         global image_counter
         data = request.json
         
-        image_exif = data.get("exif")
+        location = data.get("location")
         image_data_base64 = data.get("image")
+        
+        latitude = location.get("coords").get("latitude")
+        longtitude = location.get("coords").get("longitude")
+        
+        retrieved_location = geolocator.reverse(f"{latitude}, {longtitude}")
 
         image_data_binary = base64.b64decode(image_data_base64)
 
@@ -42,14 +49,13 @@ def upload_image():
         filename = f"image_{image_counter}.jpg"
 
         with open(os.path.join(UPLOAD_FOLDER, filename), "wb") as f:
-            print(f"saving image {filename=}")
             f.write(image_data_binary)
 
         results = model.predict(source=os.path.join(UPLOAD_FOLDER, filename), save=True)
         result = results[0]
 
         if result:
-            send_message("Fire has been detected")
+            send_message(f"Fire has been detected at {retrieved_location.address}")
             return jsonify(
                 {
                     "message": "Fire has been detected, emergency services has been contacted."

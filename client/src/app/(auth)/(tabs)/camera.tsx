@@ -1,16 +1,23 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraProps, CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from "expo-router";
+import * as Location from 'expo-location';
 
 export default function Camera() {
     const router = useRouter();
     const cameraRef = useRef<CameraView>(null);
     const [facing, setFacing] = useState<CameraProps["facing"]>("back");
     const [hasPermission, requestPermission] = useCameraPermissions();
+
+    useEffect(() => {
+        (async () => {
+            await Location.requestForegroundPermissionsAsync();
+        })();
+    }, []);
 
     if (!hasPermission) {
         return <View />;
@@ -38,13 +45,14 @@ export default function Camera() {
         }
 
         const photo = await cameraRef.current?.takePictureAsync(options);
+        const location = await Location.getCurrentPositionAsync();
 
-        const response = await fetch("https://9cf7-101-100-172-100.ngrok-free.app/upload", {
+        const response = await fetch("https://3ba6-203-127-47-53.ngrok-free.app/upload", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ image: photo?.base64 })
+            body: JSON.stringify({ image: photo?.base64, location: location })
         });
 
         console.log(response.status)
