@@ -4,21 +4,37 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
-
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useColorScheme } from "@/hooks/useColorScheme";
 
-export default function Root() {
-  // Set up the auth context and render our layout inside of it.
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <RootNavigation />
+
+      <StatusBar style="auto" />
+    </SafeAreaProvider>
+  );
+}
+
+const RootNavigation = () => {
   const colorScheme = useColorScheme();
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
-        {/* <Stack.Screen name="(tabs)" options={{ headerShown: false }} /> */}
-        <Stack.Screen name="index" options={{ headerShown: true }} />
-        <Stack.Screen name="login" options={{ presentation: "modal" }} />
-        <Stack.Screen name="register" options={{ presentation: "modal", title: "Create account"}} />
+        <Stack.Screen name="index" options={{
+          headerShown: false
+        }} />
+        <Stack.Screen name="(public)" options={{
+          headerShown: false,
+          presentation: "modal"
+        }} />
+        <Stack.Screen name="(auth)" options={{
+          headerShown: false
+        }} />
       </Stack>
     </ThemeProvider>
-  )
+  );
 }

@@ -1,23 +1,20 @@
-import { Button, StyleSheet, Text, View } from 'react-native'
-import React from 'react'
-import { router } from 'expo-router'
+import { Button, KeyboardAvoidingView, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Redirect, router } from 'expo-router'
+import { defaultStyles } from '@/styles/Styles'
+import TextButton from '@/components/ui/TextButton'
 
 export default function index() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Login</Text>
-      <Button title='Create an account' onPress={() => router.push('/register')}></Button>
+    <View style={defaultStyles.container}>
+      <Text style={[defaultStyles.title, styles.title]}>AIFirstResponders</Text>
+      <TextButton onPress={() => router.push("/(public)/login")}>Login</TextButton>
+      <TextButton onPress={() => router.push("/(public)/register")}>Sign up</TextButton>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  text: {
-    fontSize: 32
+  title: {
+    marginBottom: 30
   }
 })

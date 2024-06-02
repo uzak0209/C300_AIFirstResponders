@@ -1,7 +1,7 @@
 import { Button, KeyboardAvoidingView, StyleSheet, Text, TextInput, View } from 'react-native'
 import React, { useState } from 'react'
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { FIREBASE_AUTH } from '../../firebaseConfig';
+import { FIREBASE_AUTH } from '../../../firebaseConfig';
 import { router } from 'expo-router';
 
 export default function register() {
@@ -14,7 +14,6 @@ export default function register() {
     setLoading(true);
     try {
       const response = await createUserWithEmailAndPassword(auth, email, password);
-      console.log(response);
       alert("Registration success");
       router.back()
     } catch (error: any) {

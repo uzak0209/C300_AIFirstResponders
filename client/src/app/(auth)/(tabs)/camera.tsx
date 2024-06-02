@@ -47,7 +47,7 @@ export default function Camera() {
         const photo = await cameraRef.current?.takePictureAsync(options);
         const location = await Location.getCurrentPositionAsync();
 
-        const response = await fetch("https://a154-203-127-47-53.ngrok-free.app/upload", {
+        const response = await fetch("https://07a8-118-200-75-175.ngrok-free.app/upload", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
