@@ -9,5 +9,8 @@ fire_detection_ai/new_dataset
 # downloaded images
 simple_images/
 
+# downloaded videos from youtube
+videos/
+
 # synced pictures
 uploads/
