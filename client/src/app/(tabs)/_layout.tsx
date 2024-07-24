@@ -8,8 +8,7 @@ export default function TabLayout() {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: 'Dashboard',
-                    headerTitleAlign: 'center',
+                    headerShown: false,
                     tabBarIcon: ({ color }) => <Ionicons size={28} name="home-outline" color={color} />,
                 }}
             />
