@@ -31,7 +31,8 @@ const SOSStatus: React.FC = () => {
     try {
       const sosRef = doc(collection(SOS_DB, 'sosRequests'), sosRequest.id);
       await deleteDoc(sosRef);
-      navigation.navigate('main');
+      navigation.goBack(); //to helpneeded
+      navigation.goBack(); //to index
     } catch (error) {
       console.error('Error deleting SOS request:', error);
       Alert.alert('Error', 'Failed to delete SOS request. Please try again.');

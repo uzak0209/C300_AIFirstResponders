@@ -124,7 +124,7 @@ const SOS: React.FC = () => {
   
       const docRef = await addDoc(collection(SOS_DB, 'sosRequests'), sosData);
       console.log('SOS request sent successfully:', docRef.id);
-      navigation.navigate('HelpNeeded'); // Navigate after success
+      navigation.goBack();
       setDetails(''); // Clear details
     } catch (error) {
       console.error('Error sending SOS request:', error);
