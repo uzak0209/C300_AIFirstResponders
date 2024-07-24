@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ActivityIndicator, Button, KeyboardAvoidingView
 import React, { useState } from 'react'
 import { FIREBASE_AUTH } from '../../../firebaseConfig';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 
 export default function Login() {
     const [mobile, setMobile] = useState<number | null>(null);
@@ -9,6 +10,8 @@ export default function Login() {
     const [password, setPassword] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
     const auth = FIREBASE_AUTH;
+    const navigation = useNavigation<NavigationProp<any>>();
+
 
     const signIn = async () => {
         setLoading(true);
@@ -16,6 +19,7 @@ export default function Login() {
             const response = await signInWithEmailAndPassword(auth, email, password);
             console.log(response);
             alert("Sign in success");
+            navigation.navigate('main');
         } catch (error: any) {
             console.log(error);
             alert("Sign in failed: " + error.message);
