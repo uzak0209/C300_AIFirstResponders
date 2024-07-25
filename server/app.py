@@ -49,7 +49,7 @@ def upload_image():
         with open(os.path.join(UPLOAD_FOLDER, filename), "wb") as f:
             f.write(image_data_binary)
 
-        results = model.predict(source=os.path.join(UPLOAD_FOLDER, filename), save=True, conf=0.75)
+        results = model.predict(source=os.path.join(UPLOAD_FOLDER, filename), save=True, conf=0.7)
         result = results[0]
 
         if result:
