@@ -8,7 +8,7 @@ from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent="aiFirstResponders")
 
 UPLOAD_FOLDER = "uploads"
-model = YOLO("./fire_detection_ai/models/best.pt")
+model = YOLO("./fire_detection_ai/models/fire_best.pt")
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -24,9 +24,7 @@ def get_highest_count() -> int:
             highest = number
     return highest
 
-
 image_counter = get_highest_count()
-
 
 @app.route("/upload", methods=["POST"])
 def upload_image():
@@ -51,7 +49,7 @@ def upload_image():
         with open(os.path.join(UPLOAD_FOLDER, filename), "wb") as f:
             f.write(image_data_binary)
 
-        results = model.predict(source=os.path.join(UPLOAD_FOLDER, filename), save=True)
+        results = model.predict(source=os.path.join(UPLOAD_FOLDER, filename), save=True, conf=0.75)
         result = results[0]
 
         if result:
@@ -63,7 +61,7 @@ def upload_image():
                 }
             ), 200
         else:
-            return jsonify({"message: ": "No fire detected."}), 200
+            return jsonify({"message": "No fire detected."}), 200
     except Exception as e:
         return jsonify({"error": str(e)})
 
