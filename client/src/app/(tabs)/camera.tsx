@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
-import { Button, StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { Button, StyleSheet, Text, View, TouchableOpacity, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraProps, CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from "expo-router";
@@ -47,7 +47,7 @@ export default function Camera() {
         const photo = await cameraRef.current?.takePictureAsync(options);
         const location = await Location.getCurrentPositionAsync();
 
-        const response = await fetch("https://aa8f-203-127-47-60.ngrok-free.app/upload", {
+        const response = await fetch("https://5366-203-127-47-60.ngrok-free.app/upload", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -55,7 +55,12 @@ export default function Camera() {
             body: JSON.stringify({ image: photo?.base64, location: location })
         });
 
-        console.log(response.status)
+        const responseJson = await response.json();
+
+        if (response.ok) {
+            console.log(responseJson);
+            Alert.alert("Status", responseJson.message || "No response field found.");
+        }
     }
 
     function onCloseButtonPress() {
