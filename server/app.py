@@ -8,7 +8,7 @@ from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent="aiFirstResponders")
 
 UPLOAD_FOLDER = "uploads"
-model = YOLO("./fire_detection_ai/models/best.pt")
+model = YOLO("./fire_detection_ai/models/fire_best.pt")
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)

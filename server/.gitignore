@@ -2,9 +2,8 @@
 .venv/
 
 # fire detection ai
-fire_detection_ai/runs
-fire_detection_ai/dataset
-fire_detection_ai/new_dataset
+fire_detection_ai/runs/detect/predict*
+fire_detection_ai/dataset*
 
 # downloaded images
 simple_images/
