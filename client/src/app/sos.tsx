@@ -34,6 +34,7 @@ const SOS: React.FC = () => {
         const newCoords = { ...location.coords, accuracy: location.coords.accuracy ?? 0 };
         setUserLocation(newCoords);
       } catch (error) {
+        console.error('Error getting user location:', error);
         setErrorMessage('Error accessing your location');
       }
     };
@@ -107,7 +108,6 @@ const SOS: React.FC = () => {
       try {
         await recording.stopAndUnloadAsync();
         setIsRecording(false);
-        setRecording(null);
         console.log('Recording stopped');
       } catch (error) {
         console.error('Error stopping recording:', error);
@@ -120,7 +120,7 @@ const SOS: React.FC = () => {
       alert('Location unavailable. Please try again.');
       return;
     }
-  
+
     Alert.alert(
       'Confirm SOS',
       `Send SOS signal to your current location (${locationName ? locationName : 'Unknown location'}) (Latitude: ${userLocation.latitude}, Longitude: ${userLocation.longitude}) with details: ${details}?`,
@@ -130,13 +130,12 @@ const SOS: React.FC = () => {
           text: 'Send',
           onPress: async () => {
             try {
-              // Stop recording if it is in progress
-              if (isRecording && recording) {
-                await handleStopRecording();
-              }
-  
               let audioDownloadURL = '';
               if (recording) {
+                if (isRecording) {
+                  await recording.stopAndUnloadAsync(); //test
+                  setIsRecording(false); //test
+                }
                 const audioUri = recording.getURI();
                 if (audioUri) {
                   audioDownloadURL = await uploadAudioToFirebase(audioUri);
@@ -152,7 +151,7 @@ const SOS: React.FC = () => {
         },
       ]
     );
-  };  
+  };
 
   const sendSOSRequest = async (audioDownloadURL: string) => {
     try {

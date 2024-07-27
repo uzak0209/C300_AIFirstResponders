@@ -63,20 +63,26 @@ const HelpNeeded: React.FC = () => {
   return (
     <SafeAreaView style={styles.saveAreaContainer}>
       <StatusBar style="auto" />
-      <FlatList
-        data={sosRequests}
-        keyExtractor={(item) => item.id || ''}
-        renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => handleSosRequestPress(item)}>
-            <Text style={styles.text}>
-              {item.name ? `${item.name}: \n` : ''}
-              {item.details ? `${item.details} - \n` : ''}
-              {new Date(item.timestamp).toLocaleString() + `\n`}(Tap for details)
-            </Text>
-          </TouchableOpacity>
-        )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
+      {sosRequests.length === 0 ? (
+        <View style={styles.container}>
+          <Text style={styles.text}>No SOS requests</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={sosRequests}
+          keyExtractor={(item) => item.id || ''}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => handleSosRequestPress(item)}>
+              <Text style={styles.text}>
+                {item.name ? `${item.name}: \n` : ''}
+                {item.details ? `${item.details} - \n` : ''}
+                {new Date(item.timestamp).toLocaleString() + `\n`}(Tap for details)
+              </Text>
+            </TouchableOpacity>
+          )}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+        />
+      )}
     </SafeAreaView>
   );
 };
