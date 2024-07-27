@@ -3,94 +3,124 @@ import { useNavigation, NavigationProp } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { Marker } from 'react-native-maps';
 import MapView from 'react-native-maps';
-import { StyleSheet, Text, SafeAreaView, Button, TextInput, Alert } from 'react-native';
-import { SOS_DB } from '../../firebaseConfig';
+import { StyleSheet, Text, SafeAreaView, Button, TextInput, Alert, TouchableOpacity, View } from 'react-native';
+import { SOS_DB, SOS_Storage } from '../../firebaseConfig';
 import { addDoc, collection } from 'firebase/firestore';
+import { FontAwesome } from '@expo/vector-icons';
+import { Audio } from 'expo-av';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-const GEOCODING_API_URL = 'https://maps.googleapis.com/maps/api/geocode/json?'; // Google Maps Geocoding API endpoint
+const NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org/reverse';
 
 const SOS: React.FC = () => {
   const navigation = useNavigation<NavigationProp<any>>();
   const [userLocation, setUserLocation] = useState<GeolocationCoordinates | null>(null);
   const [locationName, setLocationName] = useState<string>('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [details, setDetails] = useState('');
+  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const getLocation = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      setErrorMessage('Location access denied');
-      return;
-    }
+  useEffect(() => {
+    const getLocation = async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMessage('Location access denied');
+        return;
+      }
 
-    try {
-      const location = await Location.getCurrentPositionAsync({});
-      const newCoords = { ...location?.coords, accuracy: location?.coords?.accuracy ?? 0 }; // Spread operator and default value
-      setUserLocation(newCoords);
-    } catch (error) {
-      console.error('Error getting user location:', error);
-      setErrorMessage('Error accessing your location');
+      try {
+        const location = await Location.getCurrentPositionAsync({});
+        const newCoords = { ...location.coords, accuracy: location.coords.accuracy ?? 0 };
+        setUserLocation(newCoords);
+      } catch (error) {
+        setErrorMessage('Error accessing your location');
+      }
+    };
+    getLocation();
+  }, []);
+
+  useEffect(() => {
+    if (userLocation) {
+      fetchLocationName(userLocation);
     }
-  };
+  }, [userLocation]);
 
   const fetchLocationName = async (coords: GeolocationCoordinates) => {
     try {
-      const params = new URLSearchParams();
-      params.set('latlng', `<span class="math-inline">\{coords\.latitude\},</span>{coords.longitude}`);
-      // Replace with your actual Google Maps API key
-      params.set('key', 'AIzaSyCWUNYEbqoLWkIaJcpbJXPiXMcHkKjq92k'); // Placeholder, replace with your key
+      const params = new URLSearchParams({
+        lat: coords.latitude.toString(),
+        lon: coords.longitude.toString(),
+        format: 'json',
+      });
 
-      const url = GEOCODING_API_URL + params.toString();
-
-      const response = await fetch(url);
+      const response = await fetch(`${NOMINATIM_API_URL}?${params.toString()}`);
 
       if (!response.ok) {
-        // Check for specific geocoding API error codes
-        if (response.status === 400) {
-          throw new Error('Bad request. Please check your API key or request parameters.');
-        } else if (response.status === 403) {
-          throw new Error('API key exceeded quota or is disabled.');
-        } else {
-          throw new Error(`Geocoding API request failed with status: ${response.status}`);
-        }
+        throw new Error(`Geocoding API request failed with status: ${response.status}`);
       }
 
       const data = await response.json();
-      const addressComponents = data.results[0].address_components;
-      let locationName = '';
-
-      // Extract relevant location name (e.g., building name, area name)
-      addressComponents.forEach((component: { types: string | string[]; long_name: string; }) => {
-        if (component.types.includes('locality') || 
-            component.types.includes('administrative_area_level_2') || 
-            component.types.includes('sublocality') || // Include sublocality
-            component.types.includes('neighborhood') // Include neighborhood
-            ) {
-            if (locationName === '') { // Only set locationName once
-              locationName = component.long_name;
-            }
-          return locationName; // Stop after finding a suitable name
-        }
-      });
-
-      setLocationName(locationName);
+      if (data && data.address) {
+        const { house_number, road, postcode } = data.address;
+        const filteredLocationParts = [house_number, road, postcode].filter(part => part).join(', ');
+        setLocationName(filteredLocationParts);
+      } else {
+        setLocationName('Unknown location');
+      }
     } catch (error) {
       console.error('Error fetching location name:', error);
-      // Handle error (e.g., display message to user)
       Alert.alert('Error', 'Failed to fetch location name. Please try again.');
     }
   };
 
-  useEffect(() => {
-    getLocation();
-  }, []);
+  const handleMicrophonePress = async () => {
+    try {
+      const { status } = await Audio.requestPermissionsAsync();
+      if (status !== 'granted') {
+        return alert('Error: Recording permission denied.');
+      }
+
+      if (isRecording && recording) {
+        await handleStopRecording();
+      } else {
+        await handleStartRecording();
+      }
+    } catch (error) {
+      console.error('Error handling microphone press:', error);
+    }
+  };
+
+  const handleStartRecording = async () => {
+    try {
+      const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
+      setRecording(recording);
+      setIsRecording(true);
+      console.log('Recording started');
+    } catch (error) {
+      console.error('Error starting recording:', error);
+    }
+  };
+
+  const handleStopRecording = async () => {
+    if (recording) {
+      try {
+        await recording.stopAndUnloadAsync();
+        setIsRecording(false);
+        setRecording(null);
+        console.log('Recording stopped');
+      } catch (error) {
+        console.error('Error stopping recording:', error);
+      }
+    }
+  };
 
   const handleSOSPress = () => {
     if (!userLocation) {
       alert('Location unavailable. Please try again.');
       return;
     }
-
+  
     Alert.alert(
       'Confirm SOS',
       `Send SOS signal to your current location (${locationName ? locationName : 'Unknown location'}) (Latitude: ${userLocation.latitude}, Longitude: ${userLocation.longitude}) with details: ${details}?`,
@@ -98,19 +128,33 @@ const SOS: React.FC = () => {
         { text: 'Cancel', onPress: () => {}, style: 'cancel' },
         {
           text: 'Send',
-          onPress: () => sendSOSRequest(), // Call sendSOSRequest
+          onPress: async () => {
+            try {
+              // Stop recording if it is in progress
+              if (isRecording && recording) {
+                await handleStopRecording();
+              }
+  
+              let audioDownloadURL = '';
+              if (recording) {
+                const audioUri = recording.getURI();
+                if (audioUri) {
+                  audioDownloadURL = await uploadAudioToFirebase(audioUri);
+                }
+              }
+              await sendSOSRequest(audioDownloadURL);
+            } catch (error) {
+              console.error('Error sending SOS:', error);
+              Alert.alert('Error', 'Failed to send SOS. Please try again.');
+            }
+          },
           style: 'destructive',
         },
       ]
     );
-  };
+  };  
 
-  function generateRandomId(length = 10) {
-    const randomString = Math.random().toString(36).substring(2, length); // Convert to base 36 string
-    return randomString;
-    }
-
-  const sendSOSRequest = async () => {
+  const sendSOSRequest = async (audioDownloadURL: string) => {
     try {
       const currentTime = new Date();
       const sosData = {
@@ -118,18 +162,42 @@ const SOS: React.FC = () => {
         name: locationName,
         latitude: userLocation?.latitude ?? 0,
         longitude: userLocation?.longitude ?? 0,
-        details: details,
-        timestamp: currentTime, // Include timestamp
+        details,
+        timestamp: currentTime,
+        audioUrl: audioDownloadURL,
       };
-  
+
       const docRef = await addDoc(collection(SOS_DB, 'sosRequests'), sosData);
       console.log('SOS request sent successfully:', docRef.id);
       navigation.goBack();
-      setDetails(''); // Clear details
+      setDetails('');
     } catch (error) {
       console.error('Error sending SOS request:', error);
       Alert.alert('Error', 'Failed to send SOS request. Please try again.');
     }
+  };
+
+  const uploadAudioToFirebase = async (uri: string) => {
+    const filename = generateRandomId() + '.m4a';
+    const storageRef = ref(SOS_Storage, `uploadvoice/${filename}`);
+
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      const uploadTask = await uploadBytes(storageRef, blob);
+      const downloadURL = await getDownloadURL(uploadTask.ref);
+
+      return downloadURL;
+    } catch (error) {
+      console.error('Error uploading audio to Firebase Storage:', error);
+      throw error;
+    }
+  };
+
+  const generateRandomId = (length = 10) => {
+    const randomString = Math.random().toString(36).substring(2, length);
+    return randomString;
   };
 
   if (errorMessage) {
@@ -159,12 +227,17 @@ const SOS: React.FC = () => {
           />
         )}
       </MapView>
-      <TextInput
-        placeholder="Enter details (optional)"
-        value={details}
-        onChangeText={(text) => setDetails(text)}
-        style={styles.textInput}
-      />
+      <View style={styles.inputContainer}>
+        <TextInput
+          placeholder="Enter details (optional)"
+          value={details}
+          onChangeText={setDetails}
+          style={styles.textInput}
+        />
+        <TouchableOpacity onPress={handleMicrophonePress} style={styles.microphoneButton}>
+          <FontAwesome name="microphone" size={24} color={isRecording ? 'red' : 'black'} />
+        </TouchableOpacity>
+      </View>
       <Button title="Send SOS Signal" onPress={handleSOSPress} />
     </SafeAreaView>
   );
@@ -181,11 +254,22 @@ const styles = StyleSheet.create({
     fontSize: 20,
     textAlign: 'center',
   },
-  textInput: {
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: 10,
     borderWidth: 1,
     borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 5,
+  },
+  textInput: {
+    flex: 1,
     padding: 10,
-    margin: 10,
+    fontSize: 16,
+  },
+  microphoneButton: {
+    padding: 10,
   },
 });
 
