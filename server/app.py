@@ -11,12 +11,31 @@ UPLOAD_FOLDER = "uploads"
 model = YOLO("./fire_detection_ai/models/fire_best.pt")
 aed_model = YOLO("./aed_ai/runs/detect/train2/weights/best.pt")
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+import os
+import base64
+import io
+import cv2
+import numpy as np
+import mediapipe as mp
+from flask import Flask, request, jsonify
+from flask_socketio import SocketIO, emit
+from PIL import Image
+from ultralytics import YOLO  # Import YOLO
 
 app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
+mp_drawing = mp.solutions.drawing_utils
+mp_pose = mp.solutions.pose
 
+# Setup Mediapipe instance
+pose = mp_pose.Pose(min_detection_confidence=0.8, min_tracking_confidence=0.7)
+# Load YOLO model
+yolo_model = YOLO('C:/Users/22017111/OneDrive - Republic Polytechnic/c290/C300_AIFirstResponders/server/pose_detection_ai/runs/pose/train9/weights/best.pt')
+
+@app.route('/video_feed', methods=['POST'])
+def video_feed():
+  
 def get_highest_count() -> int:
     highest = 0
     for file in os.listdir(UPLOAD_FOLDER):
@@ -29,10 +48,6 @@ image_counter = get_highest_count()
 
 @app.route("/upload", methods=["POST"])
 def upload_image():
-    try:
-        global image_counter
-        data = request.json
-        
         location = data.get("location")
         image_data_base64 = data.get("image")
         
@@ -91,6 +106,5 @@ def upload_aed_image():
     except Exception as e:
         return jsonify({"error": str(e)})
 
-
-if __name__ == "__main__":
-    app.run(debug=True)
+if __name__ == '__main__':
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
