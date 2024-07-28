@@ -81,7 +81,7 @@ def upload_aed_image():
         with open(os.path.join(UPLOAD_FOLDER, filename), "wb") as f:
             f.write(image_data_binary)
 
-        results = aed_model.predict(source=os.path.join(UPLOAD_FOLDER, filename), save=True, conf=0.7)
+        results = aed_model.predict(source=os.path.join(UPLOAD_FOLDER, filename), save=True, conf=0.65)
         result = results[0]
 
         if result:
