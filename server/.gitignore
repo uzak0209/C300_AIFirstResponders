@@ -11,3 +11,9 @@ simple_images/
 
 # synced pictures
 uploads/
+
+
+pose_detection_ai/dataset*
+
+
+pose_detection_ai/runs/pose/predict*

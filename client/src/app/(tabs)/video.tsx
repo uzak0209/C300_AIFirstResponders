@@ -1,69 +1,23 @@
 import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { Button, StyleSheet, Text, View, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraProps, CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from "expo-router";
-import { GLView } from 'expo-gl'; // Import GLView from expo-gl
-import * as pose from "@mediapipe/pose";
 
 export default function Camera() {
   const router = useRouter();
   const cameraRef = useRef<CameraView>(null);
   const [facing, setFacing] = useState<CameraProps["facing"]>("back");
   const [hasPermission, requestPermission] = useCameraPermissions();
-  const [poseLandmarks, setPoseLandmarks] = useState<any>(null);
-
-  useEffect(() => {
-    if (!hasPermission) {
-      return;
-    }
-
-    if (!hasPermission.granted) {
-      requestPermission();
-    }
-
-    const poseInstance = new pose.Pose({
-      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`,
-    });
-
-    poseInstance.onResults((results) => {
-      setPoseLandmarks(results.poseLandmarks);
-    });
-
-    if (cameraRef.current) {
-      const sendCameraFrameToPoseDetector = async () => {
-        if (cameraRef.current) {
-          const frame = await cameraRef.current.takePictureAsync({
-            quality: 1,
-            base64: true,
-          });
-
-          if (frame?.base64) {
-            const img = new Image();
-            img.src = `data:image/jpeg;base64,${frame.base64}`;
-            img.onload = async () => {
-              poseInstance.send({ image: img });
-            };
-          }
-        }
-      };
-
-      const intervalId = setInterval(sendCameraFrameToPoseDetector, 100);
-
-      return () => {
-        clearInterval(intervalId);
-        poseInstance.close();
-      };
-    }
-  }, [hasPermission]);
 
   if (!hasPermission) {
     return <View />;
   }
 
   if (!hasPermission.granted) {
+    // Camera permissions are not granted yet.
     return (
       <View style={styles.saveAreaContainer}>
         <Text style={{ textAlign: 'center' }}>We need your permission to show the camera</Text>
@@ -72,7 +26,7 @@ export default function Camera() {
     );
   }
 
-  async function toggleCameraFacing() {
+  function toggleCameraFacing() {
     setFacing(current => (current === 'back' ? 'front' : 'back'));
   }
 
@@ -83,29 +37,17 @@ export default function Camera() {
       exif: true
     };
 
-    try {
-      const photo = await cameraRef.current?.takePictureAsync(options);
+    const photo = await cameraRef.current?.takePictureAsync(options);
 
-      if (!photo?.base64) {
-        throw new Error("Failed to capture photo");
-      }
+    const response = await fetch("https://f0d5-116-15-119-114.ngrok-free.app/upload", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ image: photo?.base64 })
+    });
 
-      const response = await fetch("https://f0d5-116-15-119-114.ngrok-free.app/upload", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ image: photo.base64 })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-
-      console.log("Upload successful:", response.status);
-    } catch (error) {
-      console.error("Error in registerShuttlePress:", error);
-    }
+    console.log(response.status);
   };
 
   function onCloseButtonPress() {
@@ -121,8 +63,12 @@ export default function Camera() {
             <TouchableOpacity onPress={onCloseButtonPress}>
               <Ionicons name="close-outline" size={40} color="white" />
             </TouchableOpacity>
+            {/* Added camera switch button */}
             <TouchableOpacity onPress={toggleCameraFacing} style={styles.cameraSwitchButton}>
-              <Ionicons name={"camera-reverse-outline"} size={30} color="white" />
+            <TouchableOpacity onPress={toggleCameraFacing} style={styles.cameraSwitchButton}>
+  <Ionicons name={"camera-reverse-outline"} size={30} color="white" />
+</TouchableOpacity>
+
             </TouchableOpacity>
           </View>
 
@@ -132,12 +78,6 @@ export default function Camera() {
             </TouchableOpacity>
           </View>
         </CameraView>
-        {poseLandmarks && (
-          <View>
-            <Text style={styles.text}>Pose Landmarks detected!</Text>
-            {/* Display or utilize poseLandmarks data here */}
-          </View>
-        )}
       </View>
     </SafeAreaView>
   );
