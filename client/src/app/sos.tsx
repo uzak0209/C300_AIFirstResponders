@@ -10,7 +10,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-const NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org/reverse';
+const NOMINATIM_API_URL = 'https://nominatim.openstreetmap.org/reverse'; // api may take some time to work
 
 const SOS: React.FC = () => {
   const navigation = useNavigation<NavigationProp<any>>();
@@ -133,8 +133,8 @@ const SOS: React.FC = () => {
               let audioDownloadURL = '';
               if (recording) {
                 if (isRecording) {
-                  await recording.stopAndUnloadAsync(); //test
-                  setIsRecording(false); //test
+                  await recording.stopAndUnloadAsync();
+                  setIsRecording(false);
                 }
                 const audioUri = recording.getURI();
                 if (audioUri) {
