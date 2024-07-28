@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { Marker } from 'react-native-maps';
 import MapView from 'react-native-maps';
-import { StyleSheet, View, Text, SafeAreaView, Button } from 'react-native';
-import { collection, getDocs, query } from 'firebase/firestore';
+import { StyleSheet, Text, SafeAreaView, Button } from 'react-native';
+import { collection, getDocs, query, addDoc } from 'firebase/firestore';
 import { AED_DB } from '../../firebaseConfig'; // Adjust import path as needed
+import * as ImagePicker from 'expo-image-picker';
 
 interface AEDLocation {
   name?: string;
   latitude: number;
   longitude: number;
+  imageUrl?: string;
 }
 
 const AEDLocs: React.FC = () => {
   const [userLocation, setUserLocation] = useState<GeolocationCoordinates | null>(null);
   const [nearestAed, setNearestAed] = useState<AEDLocation | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const navigation = useNavigation<NavigationProp<any>>();
 
   const getUserLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -28,7 +28,7 @@ const AEDLocs: React.FC = () => {
 
     try {
       const location = await Location.getCurrentPositionAsync({});
-      const newCoords = { ...location?.coords, accuracy: location?.coords?.accuracy ?? 0 }; // Spread operator and default value
+      const newCoords = { ...location?.coords, accuracy: location?.coords?.accuracy ?? 0 };
       setUserLocation(newCoords);
     } catch (error) {
       setErrorMessage('Error accessing your location');
@@ -47,9 +47,9 @@ const AEDLocs: React.FC = () => {
       let nearestDistance = Infinity;
 
       const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-        const R = 6371e3; // meters
+        const R = 6371e3;
         const dLat = radians(lat2 - lat1);
-        const dLon = radians(lon2 - lon1);
+        const dLon = radians(lon1 - lon2);
         const a =
           Math.sin(dLat / 2) * Math.sin(dLat / 2) +
           Math.cos(radians(lat1)) * Math.cos(radians(lat2)) *
@@ -76,6 +76,58 @@ const AEDLocs: React.FC = () => {
     }
   };
 
+  const pickImage = async () => {
+    const result = await ImagePicker.launchCameraAsync({
+      base64: true,
+      quality: 1,
+      exif: true,
+    });
+
+    if (!result.canceled) {
+      const base64 = result.assets[0]?.base64;
+      if (base64) {
+        sendImageToServer(base64);
+      } else {
+        setErrorMessage('Image capture failed.');
+      }
+    } else {
+      setErrorMessage('Image capture was cancelled or failed.');
+    }
+  };
+
+  const sendImageToServer = async (base64: string) => {
+    try {
+      console.log("Sending image to server for AED detection");
+      const response = await fetch("https://5424-42-60-99-126.ngrok-free.app/aed_detection", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image: base64,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.message === 'AED detected') {
+        if (userLocation) {
+          await addDoc(collection(AED_DB, 'aed'), {
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+          });
+
+          fetchAedLocations();
+        }
+      } else {
+        setErrorMessage('No AED detected in the image.');
+      }
+    } catch (error) {
+      console.error('Failed to send image to server:', error);
+      setErrorMessage('Failed to send image to server.');
+    }
+  };
+
   useEffect(() => {
     const initialize = async () => {
       await getUserLocation();
@@ -99,7 +151,7 @@ const AEDLocs: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Button title="Register AED" color="red" onPress={() => navigation.navigate('camera')} />
+      <Button title="Register AED" color="red" onPress={pickImage} />
       {userLocation && (
         <MapView
           style={styles.map}

@@ -36,7 +36,7 @@ const HelpNeeded: React.FC = () => {
         setSosRequests(fetchedRequests);
       } catch (error) {
         console.error('Error fetching SOS requests:', error);
-        setErrorMessage('Error loading help requests');
+        setErrorMessage('Error loading requests');
       }
     };
 

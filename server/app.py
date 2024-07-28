@@ -9,6 +9,7 @@ geolocator = Nominatim(user_agent="aiFirstResponders")
 
 UPLOAD_FOLDER = "uploads"
 model = YOLO("./fire_detection_ai/models/fire_best.pt")
+aed_model = YOLO("./aed_ai/runs/detect/train2/weights/best.pt")
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -62,6 +63,31 @@ def upload_image():
             ), 200
         else:
             return jsonify({"message": "No fire detected."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route("/aed_detection", methods=["POST"])
+def upload_aed_image():
+    try:
+        global image_counter
+        data = request.json
+        
+        image_data_base64 = data.get("image")
+        image_data_binary = base64.b64decode(image_data_base64)
+
+        image_counter += 1
+        filename = f"image_{image_counter}.jpg"
+
+        with open(os.path.join(UPLOAD_FOLDER, filename), "wb") as f:
+            f.write(image_data_binary)
+
+        results = aed_model.predict(source=os.path.join(UPLOAD_FOLDER, filename), save=True)
+        result = results[0]
+
+        if result:
+            return jsonify({"message": "AED detected"}), 200
+        else:
+            return jsonify({"message": "No AED detected"}), 200
     except Exception as e:
         return jsonify({"error": str(e)})
 
