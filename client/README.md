@@ -7,4 +7,12 @@
 
 ## Dependencies used
 
-   npx expo install expo-status-bar react-native-safe-area-context expo-camera
+   npx expo install
+   expo-status-bar
+   react-native-safe-area-context
+   expo-camera
+   expo-location
+   expo-secure-store
+   firebase
+   @react-native-async-storage/async-storage
+   expo-dev-client

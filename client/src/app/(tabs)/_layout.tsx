@@ -2,15 +2,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome6 } from '@expo/vector-icons';
 import { Tabs } from "expo-router";
 
-
 export default function TabLayout() {
     return (
         <Tabs screenOptions={{ tabBarActiveTintColor: 'blue' }}>
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: 'Dashboard',
-                    headerTitleAlign: 'center',
+                    headerShown: false,
                     tabBarIcon: ({ color }) => <Ionicons size={28} name="home-outline" color={color} />,
                 }}
             />
