@@ -151,7 +151,7 @@ def upload_image():
         print("Dustbin fire")
         send_message(f"A dustbin fire has been detected at {retrieved_location.address}")
         send_location(latitude, longtitude)
-        return jsonify({"message": "Dustbin fire has been detected, please stay clear."}), 200
+        return jsonify({"message": "Dustbin fire has been detected, , emergency services has been contacted. Please stay clear."}), 200
     elif result_fire:
         print("Fire detected")
         send_message(f"A fire has been detected at {retrieved_location.address}")
