@@ -3,6 +3,7 @@ import { StyleSheet, View, TouchableOpacity, Text, Button, Image } from 'react-n
 import { CameraView, useCameraPermissions, CameraProps } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 
 export default function App() {
   const cameraRef = useRef<CameraView>(null);
@@ -114,7 +115,7 @@ export default function App() {
         {capturedImage && (
           <Image source={{ uri: capturedImage }} style={styles.capturedImage} />
         )}
-        <TouchableOpacity style={styles.backButton} onPress={() => {/* Add your navigation logic here */}}>
+        <TouchableOpacity style={styles.backButton} onPress={() => {router.replace("/")}}>
           <Ionicons name="close-outline" size={40} color="white" />
         </TouchableOpacity>
       </View>
