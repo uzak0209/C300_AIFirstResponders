@@ -34,7 +34,6 @@ const SOS: React.FC = () => {
         const newCoords = { ...location.coords, accuracy: location.coords.accuracy ?? 0 };
         setUserLocation(newCoords);
       } catch (error) {
-        console.error('Error getting user location:', error);
         setErrorMessage('Error accessing your location');
       }
     };
