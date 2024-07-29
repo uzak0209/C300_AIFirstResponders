@@ -159,21 +159,7 @@ def upload_image():
         return jsonify({"message": "Fire has been detected, emergency services has been contacted. Please move to a safe distance"}), 200
     else:
         return jsonify({"message": "No fire detected."}), 200
-
-    if result_fire:
-        send_message(f"Fire has been detected at {retrieved_location.address}")
-        send_location(latitude, longtitude)
-        return (
-            jsonify(
-                {
-                    "message": "Fire has been detected, emergency services has been contacted."
-                }
-            ),
-            200,
-        )
-        
-
-
+    
 @app.route("/aed_detection", methods=["POST"])
 def upload_aed_image():
     try:
