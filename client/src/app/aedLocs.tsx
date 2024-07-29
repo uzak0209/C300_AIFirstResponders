@@ -3,7 +3,7 @@ import * as Location from 'expo-location';
 import { Marker } from 'react-native-maps';
 import MapView from 'react-native-maps';
 import { StyleSheet, Text, SafeAreaView, Button, Alert } from 'react-native';
-import { collection, getDocs, query, addDoc } from 'firebase/firestore';
+import { collection, getDocs, query, addDoc, where } from 'firebase/firestore';
 import { AED_DB } from '../../firebaseConfig'; // Adjust import path as needed
 import * as ImagePicker from 'expo-image-picker';
 
@@ -110,6 +110,17 @@ const AEDLocs: React.FC = () => {
     }
   };
 
+  const checkIfAedExists = async (latitude: number, longitude: number): Promise<boolean> => {
+    const aedLocationsCollection = collection(AED_DB, 'aed');
+    const aedQuery = query(
+      aedLocationsCollection,
+      where('latitude', '==', latitude),
+      where('longitude', '==', longitude)
+    );
+    const querySnapshot = await getDocs(aedQuery);
+    return !querySnapshot.empty;
+  };
+
   const pickImage = async () => {
     const result = await ImagePicker.launchCameraAsync({
       base64: true,
@@ -132,7 +143,7 @@ const AEDLocs: React.FC = () => {
   const sendImageToServer = async (base64: string) => {
     try {
       console.log("Sending image to server for AED detection");
-      const response = await fetch("https://fa52-42-60-99-126.ngrok-free.app/aed_detection", {
+      const response = await fetch("https://3fb1-42-60-99-126.ngrok-free.app/aed_detection", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -146,13 +157,18 @@ const AEDLocs: React.FC = () => {
 
       if (data.message === 'AED detected') {
         if (userLocation) {
-          await addDoc(collection(AED_DB, 'aed'), {
-            latitude: userLocation.latitude,
-            longitude: userLocation.longitude,
-            name: nearestAEDName,
-          });
+          const exists = await checkIfAedExists(userLocation.latitude, userLocation.longitude);
+          if (exists) {
+            setErrorMessage('AED already registered at this location.');
+          } else {
+            await addDoc(collection(AED_DB, 'aed'), {
+              latitude: userLocation.latitude,
+              longitude: userLocation.longitude,
+              name: nearestAEDName,
+            });
 
-          fetchAedLocations();
+            fetchAedLocations();
+          }
         }
       } else {
         setErrorMessage('No AED detected in the image.');
@@ -200,10 +216,10 @@ const AEDLocs: React.FC = () => {
         >
           {nearestAed && (
             <Marker
-            coordinate={{ latitude: nearestAed.latitude, longitude: nearestAed.longitude }}
-            title={nearestAEDName}
-            description="Nearest AED"
-          />
+              coordinate={{ latitude: nearestAed.latitude, longitude: nearestAed.longitude }}
+              title={nearestAEDName}
+              description="Nearest AED"
+            />
           )}
         </MapView>
       )}
