@@ -5,6 +5,13 @@
 fire_detection_ai/runs/detect/predict*
 fire_detection_ai/dataset*
 
+# pose detection ai
+pose_detection_ai/dataset*
+pose_detection_ai/runs/pose/predict*
+
+# pycache
+__pycache__/
+
 # downloaded images
 simple_images/
 
@@ -13,9 +20,3 @@ videos/
 
 # synced pictures
 uploads/
-
-
-pose_detection_ai/dataset*
-
-
-pose_detection_ai/runs/pose/predict*
