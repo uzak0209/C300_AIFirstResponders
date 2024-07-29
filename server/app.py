@@ -8,7 +8,8 @@ from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent="aiFirstResponders")
 
 UPLOAD_FOLDER = "uploads"
-model = YOLO("./fire_detection_ai/models/fire_best.pt")
+fire_model = YOLO("./fire_detection_ai/models/fire_best.pt")
+dustbin_model = YOLO("./fire_detection_ai/models/dustbin_best.pt")
 aed_model = YOLO("./aed_ai/runs/detect/train2/weights/best.pt")
 
 import os
@@ -137,12 +138,29 @@ def upload_image():
     with open(os.path.join(UPLOAD_FOLDER, filename), "wb") as f:
         f.write(image_data_binary)
 
-    results = model.predict(
-        source=os.path.join(UPLOAD_FOLDER, filename), save=True, conf=0.7
+    results_fire = fire_model.predict(
+        source=os.path.join(UPLOAD_FOLDER, filename), save=True, conf=.5
     )
-    result = results[0]
+    results_dustbin = dustbin_model.predict(
+        source=os.path.join(UPLOAD_FOLDER, filename), save=True
+    )
+    result_fire = results_fire[0]
+    result_dustbin = results_dustbin[0]
+    
+    if result_dustbin:
+        print("Dustbin fire")
+        send_message(f"A dustbin fire has been detected at {retrieved_location.address}")
+        send_location(latitude, longtitude)
+        return jsonify({"message": "Dustbin fire has been detected, please stay clear."}), 200
+    elif result_fire:
+        print("Fire detected")
+        send_message(f"A fire has been detected at {retrieved_location.address}")
+        send_location(latitude, longtitude)
+        return jsonify({"message": "Fire has been detected, emergency services has been contacted. Please move to a safe distance"}), 200
+    else:
+        return jsonify({"message": "No fire detected."}), 200
 
-    if result:
+    if result_fire:
         send_message(f"Fire has been detected at {retrieved_location.address}")
         send_location(latitude, longtitude)
         return (
@@ -153,8 +171,7 @@ def upload_image():
             ),
             200,
         )
-    else:
-        return jsonify({"message": "No fire detected."}), 200
+        
 
 
 @app.route("/aed_detection", methods=["POST"])
