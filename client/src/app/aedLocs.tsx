@@ -143,7 +143,7 @@ const AEDLocs: React.FC = () => {
   const sendImageToServer = async (base64: string) => {
     try {
       console.log("Sending image to server for AED detection");
-      const response = await fetch("https://3fb1-42-60-99-126.ngrok-free.app/aed_detection", {
+      const response = await fetch("https://2ba3-203-127-47-51.ngrok-free.app/aed_detection", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

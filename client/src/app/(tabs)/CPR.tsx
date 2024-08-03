@@ -67,7 +67,7 @@ export default function App() {
         if (photo && photo.base64) {
           console.log("Captured image base64 length:", photo.base64.length);
           // Send the base64 image data to your Flask server
-          const response = await fetch("https://9fb8-116-15-118-124.ngrok-free.app/video_feed", {
+          const response = await fetch("https://2ba3-203-127-47-51.ngrok-free.app/video_feed", {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
