@@ -3,6 +3,7 @@ import { StyleSheet, View, TouchableOpacity, Text, Button, Image } from 'react-n
 import { CameraView, useCameraPermissions, CameraProps } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Audio } from 'expo-av';
 import { router } from 'expo-router';
 
 export default function App() {
@@ -11,6 +12,13 @@ export default function App() {
   const [isCapturing, setIsCapturing] = useState<boolean>(false);
   const [facing, setFacing] = useState<CameraProps['facing']>('back');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+
+  const audioFiles: { [key: string]: any } = {
+    'kneel.mp3': require('../../assets/audio/kneel.mp3'),
+    'straighten_arms.mp3': require('../../assets/audio/straighten_arms.mp3'),
+    'correct.mp3': require('../../assets/audio/correct.mp3'),
+  };
 
   useEffect(() => {
     (async () => {
@@ -33,8 +41,20 @@ export default function App() {
       if (intervalId) {
         clearInterval(intervalId);
       }
+      if (sound) {
+        sound.unloadAsync();
+      }
     };
-  }, [hasPermission, isCapturing]);
+  }, [hasPermission, isCapturing, sound]);
+
+  const playSound = async (fileName: string) => {
+    if (sound) {
+      await sound.unloadAsync();
+    }
+    const { sound: newSound } = await Audio.Sound.createAsync(audioFiles[fileName]);
+    setSound(newSound);
+    await newSound.playAsync();
+  };
 
   const captureFrame = async () => {
     if (cameraRef.current) {
@@ -47,7 +67,7 @@ export default function App() {
         if (photo && photo.base64) {
           console.log("Captured image base64 length:", photo.base64.length);
           // Send the base64 image data to your Flask server
-          const response = await fetch("https://24da-116-15-118-124.ngrok-free.app/video_feed", {
+          const response = await fetch("https://9fb8-116-15-118-124.ngrok-free.app/video_feed", {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -62,6 +82,13 @@ export default function App() {
             console.log("Response data:", responseData);
             if (responseData.image) {
               setCapturedImage(`data:image/jpeg;base64,${responseData.image}`);
+            }
+            if (responseData.squatting) {
+              playSound('kneel.mp3');
+            } else if (responseData.bending_arms) {
+              playSound('straighten_arms.mp3');
+            } else {
+              playSound('correct.mp3');
             }
           } catch (error) {
             console.error("Error parsing JSON:", error, responseText);
@@ -115,9 +142,14 @@ export default function App() {
         {capturedImage && (
           <Image source={{ uri: capturedImage }} style={styles.capturedImage} />
         )}
-        <TouchableOpacity style={styles.backButton} onPress={() => {router.replace("/")}}>
+        <TouchableOpacity style={styles.backButton} onPress={() => { router.replace("/") }}>
           <Ionicons name="close-outline" size={40} color="white" />
         </TouchableOpacity>
+      </View>
+      <View style={styles.audioButtonsContainer}>
+        <Button title="Play Kneel Sound" onPress={() => playSound('kneel.mp3')} />
+        <Button title="Play Straighten Arms Sound" onPress={() => playSound('straighten_arms.mp3')} />
+        <Button title="Play Correct Sound" onPress={() => playSound('correct.mp3')} />
       </View>
     </SafeAreaView>
   );
@@ -165,5 +197,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 40,
     left: 20,
+  },
+  audioButtonsContainer: {
+    flexDirection: 'column',
+    justifyContent: 'space-around',
+    paddingHorizontal: 20,
+    marginVertical: 10,
   },
 });
