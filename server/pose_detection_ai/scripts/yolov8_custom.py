@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import json
-
+ 
 # Define the paths
 annotations_dir = 'C:/Users/22017111/OneDrive - Republic Polytechnic/c290/C300_AIFirstResponders/server/pose_detection_ai/datasets/annotations'
 
