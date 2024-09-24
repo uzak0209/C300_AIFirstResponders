@@ -67,7 +67,7 @@ export default function App() {
         if (photo && photo.base64) {
           console.log("Captured image base64 length:", photo.base64.length);
           // Send the base64 image data to your Flask server
-          const response = await fetch("https://2ba3-203-127-47-51.ngrok-free.app/video_feed", {
+          const response = await fetch("127.0.0.1:5000/api/v1/pose-detection", {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -85,7 +85,9 @@ export default function App() {
             }
             if (responseData.squatting) {
               playSound('kneel.mp3');
-            } else if (responseData.bending_arms) {
+            } else if (responseData.bending_arms
+
+            ) {
               playSound('straighten_arms.mp3');
             } else {
               playSound('correct.mp3');
